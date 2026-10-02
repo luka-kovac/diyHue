@@ -634,17 +634,15 @@ class ClipV2ResourceId(Resource):
         elif resource == "entertainment_configuration":
             if "action" in putDict:
                 if putDict["action"] == "start":
-                    logging.info("start hue entertainment")
-                    for light in object.lights:
-                        light().update_attr({"state": {"mode": "streaming"}})
-                    object.update_attr({"stream": {"active": True, "owner": authorisation["user"].username, "proxymode": "auto", "proxynode": "/bridge"}})
-                    Thread(target=entertainmentService, args=[
-                           object, authorisation["user"]]).start()
-                    sleep(1)
+                    if not object.stream["active"]:
+                        logging.info("start hue entertainment")
+                        object.update_attr({"stream": {"active": True, "owner": authorisation["user"].username, "proxymode": "auto", "proxynode": "/bridge"}})
+                        Thread(target=entertainmentService, args=[
+                               object, authorisation["user"]]).start()
+                        sleep(1)
                 elif putDict["action"] == "stop":
                     logging.info("stop entertainment")
-                    for light in object.lights:
-                        light().update_attr({"state": {"mode": "homeautomation"}})
+                    # The worker releases streaming mode and restores the lights.
                     proc = object.stream.get("_proc")
                     if proc:
                         proc.kill()
